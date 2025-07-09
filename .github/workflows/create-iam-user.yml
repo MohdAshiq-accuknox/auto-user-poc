@@ -1,23 +1,19 @@
-name: Create or Attach IAM Policies to User
+name: Create IAM User (and optionally attach policies)
 
 on:
   workflow_dispatch:
     inputs:
-      action:
-        description: 'Action to perform: create_user or attach_policy'
-        required: true
-        default: 'create_user'
       iam_username:
-        description: 'IAM username'
+        description: 'IAM username to create'
         required: true
         default: 'testuser-poc'
       policy_arns:
-        description: 'Comma-separated list of policy ARNs'
-        required: true
-        default: 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+        description: 'Comma-separated policy ARNs (optional)'
+        required: false
+        default: ''
 
 jobs:
-  run:
+  create_user:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,21 +30,11 @@ jobs:
           pip install ansible boto3 botocore
           ansible-galaxy collection install -r requirements.yml
 
-      - name: Run Ansible playbook based on action
+      - name: Run Ansible playbook
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          if [ "${{ github.event.inputs.action }}" == "create_user" ]; then
-            echo "Creating IAM user and attaching policies..."
-            ansible-playbook create_iam_user.yml \
-              --extra-vars "new_iam_username=${{ github.event.inputs.iam_username }} policy_arns='${{ github.event.inputs.policy_arns }}'"
-          elif [ "${{ github.event.inputs.action }}" == "attach_policy" ]; then
-            echo "Attaching policies to existing user..."
-            ansible-playbook attach_policy.yml \
-              --extra-vars "iam_username=${{ github.event.inputs.iam_username }} policy_arns='${{ github.event.inputs.policy_arns }}'"
-          else
-            echo "Unknown action: ${{ github.event.inputs.action }}"
-            exit 1
-          fi
+          ansible-playbook create_iam_user.yml \
+            --extra-vars "new_iam_username=${{ github.event.inputs.iam_username }} policy_arns='${{ github.event.inputs.policy_arns }}'"
