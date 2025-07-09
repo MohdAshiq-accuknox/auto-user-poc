@@ -6,12 +6,7 @@
 
   vars:
     new_iam_username: "{{ new_iam_username }}"
-    policy_arns_list: >-
-      {% if (policy_arns | default('') | trim) | length > 0 %}
-        {{ policy_arns.split(',') }}
-      {% else %}
-        []
-      {% endif %}
+    raw_policy_arns: "{{ policy_arns | default('') | trim }}"
 
   tasks:
     - name: Create new IAM user
@@ -19,11 +14,16 @@
         name: "{{ new_iam_username }}"
         state: present
 
+    - name: Convert comma-separated string to list (if provided)
+      set_fact:
+        policy_arns_list: "{{ raw_policy_arns.split(',') }}"
+      when: raw_policy_arns | length > 0
+
     - name: Attach each policy if policies provided
       amazon.aws.iam_policy:
         policy_arn: "{{ item }}"
         users:
           - "{{ new_iam_username }}"
         state: present
-      loop: "{{ policy_arns_list }}"
-      when: policy_arns_list | length > 0
+      loop: "{{ policy_arns_list | default([]) }}"
+      when: policy_arns_list is defined and policy_arns_list | length > 0
