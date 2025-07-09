@@ -7,11 +7,7 @@
 
     - name: Convert comma-separated string to list (if provided)
       set_fact:
-        policy_arns_list: >-
-          {{
-            (policy_arns | default('') | trim) | length > 0
-              | ternary(policy_arns.split(','), [])
-          }}
+        policy_arns_list: "{{ policy_arns.split(',') if policy_arns | default('') | trim | length > 0 else [] }}"
 
     - name: Create new IAM user and attach policies if provided
       amazon.aws.iam_user:
