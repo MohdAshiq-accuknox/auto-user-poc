@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Set up Python
@@ -25,7 +25,7 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Create virtualenv and install Ansible + collection
+    - name: Create virtualenv & install Ansible + amazon.aws
       run: |
         python -m venv venv
         source venv/bin/activate
@@ -33,14 +33,10 @@ jobs:
         pip install ansible boto3 botocore
         ansible-galaxy collection install -r requirements.yml
 
-    - name: Show ansible version
+    - name: Show Ansible version & collections
       run: |
         source venv/bin/activate
         ansible --version
-
-    - name: List installed collections
-      run: |
-        source venv/bin/activate
         ansible-galaxy collection list
 
     - name: Run playbook
