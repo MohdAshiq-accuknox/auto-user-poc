@@ -3,27 +3,18 @@
   hosts: localhost
   connection: local
   gather_facts: false
-
-  vars:
-    new_iam_username: "{{ new_iam_username }}"
-    raw_policy_arns: "{{ policy_arns | default('') | trim }}"
-
   tasks:
-    - name: Create new IAM user
-      amazon.aws.iam_user:
-        name: "{{ new_iam_username }}"
-        state: present
 
     - name: Convert comma-separated string to list (if provided)
       set_fact:
-        policy_arns_list: "{{ raw_policy_arns.split(',') }}"
-      when: raw_policy_arns | length > 0
+        policy_arns_list: >-
+          {{
+            (policy_arns | default('') | trim) | length > 0
+              | ternary(policy_arns.split(','), [])
+          }}
 
-    - name: Attach each policy if policies provided
-      amazon.aws.iam_policy_attachment:
-        policy_arn: "{{ item }}"
-        users:
-          - "{{ new_iam_username }}"
+    - name: Create new IAM user and attach policies if provided
+      amazon.aws.iam_user:
+        name: "{{ new_iam_username }}"
         state: present
-      loop: "{{ policy_arns_list | default([]) }}"
-      when: policy_arns_list is defined and policy_arns_list | length > 0
+        managed_policy: "{{ policy_arns_list }}"
