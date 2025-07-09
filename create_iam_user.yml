@@ -1,29 +1,24 @@
 ---
-- name: Create IAM user
+- name: Create IAM user and optionally attach policies
   hosts: localhost
   connection: local
   gather_facts: false
 
   vars:
-    new_iam_username: "{{ new_iam_username | default('defaultuser') }}"
-    policy_arns_list: "{{ policy_arns.split(',') }}"
+    new_iam_username: "{{ new_iam_username }}"
+    policy_arns_list: "{{ (policy_arns | default('')) | trim | length > 0 | ternary(policy_arns.split(','), []) }}"
 
   tasks:
     - name: Create new IAM user
       amazon.aws.iam_user:
         name: "{{ new_iam_username }}"
         state: present
-      register: user_result
 
-    - name: Attach each policy to new user
+    - name: Attach each policy if policies provided
       amazon.aws.iam_policy_attachment:
         policy_arn: "{{ item }}"
         users:
           - "{{ new_iam_username }}"
         state: present
       loop: "{{ policy_arns_list }}"
-
-    - name: Show result
-      debug:
-        var: user_result
-
+      when: policy_arns_list | length > 0
