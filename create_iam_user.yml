@@ -6,7 +6,12 @@
 
   vars:
     new_iam_username: "{{ new_iam_username }}"
-    policy_arns_list: "{{ (policy_arns | default('')) | trim | length > 0 | ternary(policy_arns.split(','), []) }}"
+    policy_arns_list: >-
+      {% if (policy_arns | default('') | trim) | length > 0 %}
+        {{ policy_arns.split(',') }}
+      {% else %}
+        []
+      {% endif %}
 
   tasks:
     - name: Create new IAM user
@@ -15,7 +20,7 @@
         state: present
 
     - name: Attach each policy if policies provided
-      amazon.aws.iam_policy:
+      amazon.aws.iam_policy_attachment:
         policy_arn: "{{ item }}"
         users:
           - "{{ new_iam_username }}"
