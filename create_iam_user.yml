@@ -1,0 +1,20 @@
+---
+- name: Create IAM user
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    new_iam_username: "{{ new_iam_username | default('defaultuser') }}"
+
+  tasks:
+    - name: Create new IAM user
+      amazon.aws.iam_user:
+        name: "{{ new_iam_username }}"
+        state: present
+      register: user_result
+
+    - name: Show result
+      debug:
+        var: user_result
+
