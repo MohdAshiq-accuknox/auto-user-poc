@@ -20,7 +20,7 @@
         state: present
 
     - name: Attach each policy if policies provided
-      amazon.aws.iam_policy_attachment:
+      amazon.aws.iam_policy:
         policy_arn: "{{ item }}"
         users:
           - "{{ new_iam_username }}"
