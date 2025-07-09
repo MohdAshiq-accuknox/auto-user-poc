@@ -20,7 +20,8 @@
       when: raw_policy_arns | length > 0
 
     - name: Attach each policy if policies provided
-      amazon.aws.iam_policy:
+      action: amazon.aws.iam_managed_policy_attachment
+      args:
         policy_arn: "{{ item }}"
         users:
           - "{{ new_iam_username }}"
